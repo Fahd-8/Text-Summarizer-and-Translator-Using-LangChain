@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Summarization & Simplification</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0d0d0d;
+            color: #eaeaea;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            z-index: 2;
+            box-sizing: border-box;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            left: -100px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #00ffff, #0040ff);
+            opacity: 0.5;
+            filter: blur(120px);
+            z-index: -1;
+        }
+        .container::after {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            right: -100px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #ff00ff, #ff0040);
+            opacity: 0.5;
+            filter: blur(120px);
+            z-index: -1;
+        }
+        h1 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 30px;
+            background: linear-gradient(to right, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 30px;
+            padding: 15px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            background: #222;
+            color: #eaeaea;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.2);
+            resize: none;
+            transition: box-shadow 0.3s ease;
+            display: block;
+            margin: 0 auto;
+            text-align: center;
+        }
+        textarea:focus {
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 1), 0 0 20px rgba(255, 255, 255, 0.4);
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background: linear-gradient(145deg, #0040ff, #00ffff);
+            color: #0d0d0d;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.2);
+            transition: background 0.3s ease, transform 0.3s ease;
+            margin-bottom: 30px;
+        }
+        button:hover {
+            background: linear-gradient(145deg, #00ffff, #0040ff);
+            transform: translateY(-3px);
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 10px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            max-height: 400px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        .result h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            background: linear-gradient(to right, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+        .result p {
+            font-size: 18px;
+            line-height: 1.6;
+            background: #222;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 255, 255, 0.1);
+            color: #eaeaea;
+            word-wrap: break-word;
+            animation: fadeIn 1s ease-in-out;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        /* Loader Styles */
+        .loader {
+            border: 16px solid rgba(26, 26, 26, 0.8);
+            border-radius: 50%;
+            border-top: 16px solid #00ffff;
+            width: 80px;
+            height: 80px;
+            position: relative;
+            margin: 30px auto;
+            animation: spin 2s linear infinite;
+        }
+        .loader .time {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #00ffff;
+            font-weight: bold;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Text Summarization & Simplification</h1>
+        <textarea id="inputText" placeholder="Enter your text here..."></textarea>
+        <button onclick="processText()">Process Text</button>
+
+        <div id="loading" class="loader" style="display: none;">
+            <div id="timer" class="time">0s</div>
+        </div>
+
+        <div class="result">
+            <h3>Summary:</h3>
+            <p id="summaryResult"></p>
+            <h3>Simple Text:</h3>
+            <p id="simpleTextResult"></p>
+        </div>
+        <p id="error" class="error"></p>
+    </div>
+
+    <script>
+        let startTime;
+
+        function processText() {
+            const inputText = document.getElementById('inputText').value;
+            const errorElement = document.getElementById('error');
+            const loader = document.getElementById('loading');
+            const timer = document.getElementById('timer');
+            
+            // Clear previous results and errors
+            document.getElementById('summaryResult').innerText = '';
+            document.getElementById('simpleTextResult').innerText = '';
+            errorElement.innerText = '';
+
+            // Show loader
+            loader.style.display = 'block';
+            startTime = Date.now();
+            timer.innerText = '0s';
+
+            // Update timer every second
+            const timerInterval = setInterval(() => {
+                const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                timer.innerText = `${elapsedTime}s`;
+            }, 1000);
+
+            fetch('/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: inputText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loader
+                loader.style.display = 'none';
+                clearInterval(timerInterval);
+
+                document.getElementById('summaryResult').innerText = data.summary;
+                document.getElementById('simpleTextResult').innerText = data.simple_text;
+            })
+            .catch(error => {
+                // Hide loader
+                loader.style.display = 'none';
+                clearInterval(timerInterval);
+
+                errorElement.innerText = 'An error occurred while processing the text. Please try again.';
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

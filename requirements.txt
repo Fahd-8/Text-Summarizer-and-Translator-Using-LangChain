@@ -1,0 +1,5 @@
+langchain
+langchain-community
+transformers
+torch
+flask
